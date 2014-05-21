@@ -47,13 +47,16 @@ module DramUtils
       end
 
       cname, aliases, af, ip6, ip4 = info
+      ips = []
+      ips << ip6 if ip6
+      ips << ip4 if ip4 and ip6 != ip4
 
       {
           status: "success",
           cname: cname,
           aliases: aliases,
           af: AF_TABLE[af],
-          ips: ip4 == ip6 ? [ip4] : [ip4, ip6]
+          ips: ips
       }.to_json
     end
 
