@@ -1,0 +1,80 @@
+%label{for: "host"} Host:
+%input#host{type: "text", name: "host"}
+
+%div#output
+
+%button#dns{onclick: "dns()"} DNS lookup
+%button#http_ping{onclick: "http_ping()"} HTTP ping
+%button#whois{onclick: "whois()"} Whois lookup
+
+:javascript
+  function $id(i) { return document.getElementById(i); }
+  function get_host() {
+      return $id("host").value;
+  }
+  function output(text) {
+      $id("output").innerHTML = text;
+  }
+  function dns() {
+      var url = "#{url "/api/dns?host="}" + escape(get_host());
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url);
+      xhr.onreadystatechange = function() {
+          if(this.readyState != 4) return;
+          if(this.status != 200) {
+              output("Network error!");
+              return;
+          }
+          resp = JSON.parse(this.response);
+          console.log(resp);
+          switch(resp.status) {
+              case "success": output(
+                "DNS Result: <br />" +
+                "CNAME: " + resp.cname + "<br />" +
+                "Aliases: " + resp.aliases.join(",") + "<br />" +
+                "Address family: " + resp.af + "<br />" +
+                "IP: " + resp.ips.join(",") + "<br />"
+              ); break;
+
+              case "error": output("Error: " + resp.error.msg); break;
+              default: "Network error"; break;
+          }
+      }
+      xhr.send();
+  }
+  function http_ping() {
+    var url = "#{url "/api/http_ping?host="}" + escape(get_host());
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.onreadystatechange = function() {
+        if(this.readyState != 4) return;
+        if(this.status != 200) {
+            output("Network error!");
+            return;
+        }
+        resp = JSON.parse(this.response);
+        console.log(resp);
+        switch(resp.status) {
+            case "success": output(
+                resp.result ? "Success, duration: " + resp.duration : "Ping fail"
+            ); break;
+            case "error": output("Error: " + resp.error.msg); break;
+            default: "Network error"; break;
+        }
+    }
+    xhr.send();
+  }
+  function whois() {
+    var url = "#{url "/api/whois?see=1&host="}" + escape(get_host());
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.onreadystatechange = function() {
+        if(this.readyState != 4) return;
+        if(this.status != 200) {
+            output("Network error!");
+            return;
+        }
+        output(this.response);
+    }
+    xhr.send();
+  }
