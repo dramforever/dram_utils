@@ -77,7 +77,7 @@ module DramUtils
       required_param :host
       p = Net::Ping::HTTP.new params[:host]
       p.timeout = 3
-      result = p.ping
+      result = p.ping rescue false
 
       {
           status: "success",
